@@ -2,8 +2,7 @@
 
 ## Scenario
 
-In this lab, we'll continue working on the blog site, and add some features that
-only logged in users have access to.
+This lab continues work on a blog site and adds features that only logged-in users can access. Articles have an `is_member_only` flag, and two new endpoints return only those articles to users who are signed in.
 
 ## Tools & Resources
 
@@ -13,8 +12,7 @@ only logged in users have access to.
 
 ## Set Up
 
-There is some starter code in place for a Flask API backend and a React frontend.
-To get set up, run:
+There is starter code for a Flask API backend and a React frontend. To get set up, run:
 
 ```bash
 pipenv install; pipenv shell
@@ -24,100 +22,48 @@ flask db upgrade
 python seed.py
 ```
 
-You can work on this lab by running the tests with `pytest -x`. It will also be
-helpful to see what's happening during the request/response cycle by running the
-app in the browser. You can run the Flask server with:
+Run the tests with `pytest -x`. Start the Flask server with:
 
 ```bash
 python app.py
 ```
 
-And you can run React in another terminal from the root project directory with:
+Run React in another terminal from the root project directory with:
 
 ```bash
 npm start --prefix client
 ```
 
-You don't have to make any changes to the React code to get this lab working.
+## Features
 
-## Instructions
+Anyone can view the public articles, with a limit of 3 page views per session for visitors who are not logged in. Logged-in users can also view member-only articles.
 
-### Task 1: Define the Problem
+| Route | Method | Description |
+| --- | --- | --- |
+| `/login` | POST | Logs in a user by username and stores `user_id` in the session |
+| `/logout` | DELETE | Clears `user_id` from the session |
+| `/check_session` | GET | Returns the logged-in user, or 401 |
+| `/articles` | GET | Lists all articles |
+| `/articles/<id>` | GET | Shows one article (3 free views for logged-out visitors) |
+| `/members_only_articles` | GET | Lists member-only articles. 401 if not logged in |
+| `/members_only_articles/<id>` | GET | Shows one member-only article. 401 if not logged in |
 
-Now that we've got the basic login feature working, we need to reward our logged
-in users with some bonus content that only users who have logged in will be able
-to access.
+## How It Works
 
-### Task 2: Determine the Design
+`MemberOnlyIndex` and `MemberOnlyArticle` check `session.get('user_id')` at the start of each `get()` method.
 
-We added a new attribute to our articles, `is_member_only`, to reflect whether
-the article should only be available to authorized users of the site. We also
-created two new views: `MemberOnlyIndex` and `MemberOnlyArticle`.
+- If there is no `user_id` in the session, the response is `{'error': 'Unauthorized. Please log in.'}` with a 401 status.
+- If the user is logged in, `MemberOnlyIndex` returns every article where `is_member_only` is true, and `MemberOnlyArticle` returns the article matching the ID.
+- `MemberOnlyArticle` returns a 404 if no article has that ID.
 
-Your goal is to add the following functionality to the new views:
+## Screenshot
 
-- If a user is not signed in, the `get()` methods in each view should return a
-  status code of 401 unauthorized, along with an error message.
-- If the user is signed in, the `get()` methods in each view should return the
-  JSON data for the members-only articles and the members-only article by ID, respectively.
+![Screenshot of completed work](./screenshot.png)
 
-### Task 3: Develop, Test, and Refine the Code
-
-#### Step 1: Check Current User for Authorization
-
-Use the `session` to find if the user is logged in or not.
-
-#### Step 2: Update Logic and Response if User is Authorized
-
-If a user is not signed in, the `get()` methods in each view should return a
-status code of 401 unauthorized, along with an error message.
-
-#### Step 3: Update Logic and Response if User is not Authorized
-
-If a user is not signed in, the `get()` methods in each view should return a
-status code of 401 unauthorized, along with an error message.
-
-#### Step 4: Test and Refine the Code
-
-Run the test suite:
+## Testing
 
 ```bash
 pytest
 ```
 
-If any tests aren't passing, refine your code using each error message.
-
-View the app in browser and test login, logout, and session persistence. Refine code if needed.
-
-Feel free to also take a look at how the frontend logic is set up to use these endpoints.
-
-#### Step 5: Commit and Push Git History
-
-* Commit and push your code:
-
-```bash
-git add .
-git commit -m "final solution"
-git push
-```
-
-* If you created a separate feature branch, remember to open a PR on main and merge.
-
-### Task 4: Document and Maintain
-Best Practice documentation steps:
-* Add comments to the code to explain purpose and logic, clarifying intent and functionality of your code to other developers.
-* Update README text to reflect the functionality of the application following https://makeareadme.com. 
-  * Add screenshot of completed work included in Markdown in README.
-* Delete any stale branches on GitHub
-* Remove unnecessary/commented out code
-* If needed, update git ignore to remove sensitive data
-
-## Important Submission Note
-
-Before you submit your solution, you need to save your progress with git.
-
-1. Add your changes to the staging area by executing `git add .`.
-2. Create a commit by executing `git commit -m "Your commit message"`.
-3. Push your commits to GitHub by executing `git push origin main`.
-
-CodeGrade will grade your lab using the same tests as are provided in the `testing/` directory.
+All tests in `server/testing/app_test.py` should pass.
